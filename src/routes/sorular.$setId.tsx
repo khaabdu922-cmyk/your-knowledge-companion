@@ -127,14 +127,18 @@ function QuestionsPage() {
     }
     const question = list.data?.find((item) => item.id === selectedId);
     if (question) {
+      const isFill = (question.question_type || "multiple") === "fill";
       const loaded = {
         question: question.question,
         option_a: question.option_a,
-        option_b: question.option_b,
-        option_c: question.option_c,
+        option_b: isFill ? "" : question.option_b,
+        option_c: isFill ? "" : question.option_c,
         option_d: question.option_d,
-        correct_answer: question.correct_answer.toUpperCase(),
+        correct_answer: isFill ? question.correct_answer : question.correct_answer.toUpperCase(),
         question_type: question.question_type || "multiple",
+        extra_answers: isFill
+          ? [question.option_b, question.option_c, ...parseExtras(question.correct_answer)].filter((v) => v.trim())
+          : [],
       };
       setForm(loaded);
       lastSavedRef.current = JSON.stringify(loaded);
