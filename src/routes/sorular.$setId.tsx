@@ -525,9 +525,9 @@ function QuestionsPage() {
                 <div className="grid gap-2">
                   {(() => {
                     const keys = ["option_a", "option_b", "option_c"] as const;
-                    const filledCount = keys.filter((key) => form[key].trim()).length;
-                    const visibleCount = Math.min(Math.max(filledCount, 1), keys.length);
-                    const canAdd = visibleCount < keys.length && form[keys[visibleCount - 1]!].trim();
+                    const lastUsed = keys.reduce((acc, key, i) => (form[key] !== "" ? i + 1 : acc), 0);
+                    const visibleCount = Math.min(Math.max(lastUsed, 1), keys.length);
+                    const canAdd = visibleCount < keys.length;
                     return (
                       <>
                         {keys.slice(0, visibleCount).map((key, i) => (
