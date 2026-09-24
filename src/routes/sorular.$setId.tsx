@@ -523,16 +523,36 @@ function QuestionsPage() {
             {form.question_type === "fill" && (
               <div className="mt-4 lg:mt-3">
                 <div className="grid gap-2">
-                  {(["option_a", "option_b", "option_c"] as const).map((key, i) => (
-                    <input
-                      key={key}
-                      value={form[key]}
-                      onChange={(event) => set(key, event.target.value)}
-                      placeholder={i === 0 ? "Doğru cevap" : `Kabul edilen ${i + 1}. cevap (isteğe bağlı)`}
-                      aria-label={`${i + 1}. doğru cevap`}
-                      className={`h-14 w-full rounded-xl border px-4 text-base font-semibold text-studio-ink outline-hidden placeholder:text-studio-muted/60 ${i === 0 ? "border-studio-yellow bg-studio-yellow/10" : "border-studio-line bg-studio-elevated/60 focus:border-studio-yellow"}`}
-                    />
-                  ))}
+                  {(() => {
+                    const keys = ["option_a", "option_b", "option_c"] as const;
+                    const filledCount = keys.filter((key) => form[key].trim()).length;
+                    const visibleCount = Math.min(Math.max(filledCount, 1), keys.length);
+                    const canAdd = visibleCount < keys.length && form[keys[visibleCount - 1]!].trim();
+                    return (
+                      <>
+                        {keys.slice(0, visibleCount).map((key, i) => (
+                          <input
+                            key={key}
+                            value={form[key]}
+                            onChange={(event) => set(key, event.target.value)}
+                            placeholder={i === 0 ? "Doğru cevap" : `Kabul edilen ${i + 1}. cevap (isteğe bağlı)`}
+                            aria-label={`${i + 1}. doğru cevap`}
+                            className={`h-14 w-full rounded-xl border px-4 text-base font-semibold text-studio-ink outline-hidden placeholder:text-studio-muted/60 ${i === 0 ? "border-studio-yellow bg-studio-yellow/10" : "border-studio-line bg-studio-elevated/60 focus:border-studio-yellow"}`}
+                          />
+                        ))}
+                        {canAdd && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => set(keys[visibleCount]!, " ")}
+                            className="h-10 w-full rounded-xl border border-dashed border-studio-line text-sm font-bold text-studio-muted hover:border-studio-yellow hover:bg-studio-yellow/10 hover:text-studio-yellow"
+                          >
+                            <Plus /> Alternatif cevap ekle
+                          </Button>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
                 <p className="mt-2 text-xs text-studio-muted">Büyük/küçük harf ve fazla boşluk fark etmez.</p>
               </div>
