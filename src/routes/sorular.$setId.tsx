@@ -209,14 +209,25 @@ function QuestionsPage() {
     }
     if (silent) setAutoStatus("Kaydediliyor...");
     try {
+      const extras = snapshot.extra_answers.map((v) => v.trim()).filter(Boolean).slice(0, MAX_FILL_ANSWERS - 1);
+      const payload =
+        type === "fill"
+          ? {
+              ...snapshot,
+              option_b: extras[0] ?? "",
+              option_c: extras[1] ?? "",
+              option_d: "",
+              correct_answer: extras.slice(2).join(EXTRA_SEP) || "A",
+            }
+          : snapshot;
       const target = targetRef.current;
       if (target.draft || !target.id) {
-        const result = await add({ data: { ...snapshot, setId } });
+        const result = await add({ data: { ...payload, setId } });
         setSelectedId(result.id);
         setDraftMode(false);
         targetRef.current = { draft: false, id: result.id };
       } else {
-        await edit({ data: { ...snapshot, id: target.id } });
+        await edit({ data: { ...payload, id: target.id } });
       }
       lastSavedRef.current = JSON.stringify(snapshot);
       if (silent) setAutoStatus("Kaydedildi");
