@@ -54,7 +54,12 @@ const empty = {
   option_d: "",
   correct_answer: "A",
   question_type: "multiple",
+  extra_answers: [] as string[],
 };
+
+const MAX_FILL_ANSWERS = 8;
+const EXTRA_SEP = "||";
+const parseExtras = (raw: string) => (raw.includes(EXTRA_SEP) ? raw.split(EXTRA_SEP).map((v) => v.trim()).filter(Boolean) : []);
 
 const TYPES = [
   { id: "multiple", label: "Çoktan Seçmeli" },
