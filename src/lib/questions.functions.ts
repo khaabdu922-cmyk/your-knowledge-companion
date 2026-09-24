@@ -158,7 +158,7 @@ function clean(data: QuestionInput): QuestionInput {
       option_b: String(data.option_b || "").trim().slice(0, 200),
       option_c: String(data.option_c || "").trim().slice(0, 200),
       option_d: "",
-      correct_answer: "A",
+      correct_answer: String(data.correct_answer || "A").slice(0, 2000),
       question_type: type,
       category: data.category ? String(data.category).trim().slice(0, 60) : undefined,
     };
@@ -181,7 +181,7 @@ function clean(data: QuestionInput): QuestionInput {
 
 function validate(d: QuestionInput) {
   if (!d.question) throw new Error("Soru metni gerekli");
-  if (!d.correct_answer || !d.correct_answer.split("").every((l) => ["A", "B", "C", "D"].includes(l)))
+  if (d.question_type !== "fill" && (!d.correct_answer || !d.correct_answer.split("").every((l) => ["A", "B", "C", "D"].includes(l))))
     throw new Error("Doğru cevap A, B, C veya D olmalı");
 }
 

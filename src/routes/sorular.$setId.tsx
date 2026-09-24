@@ -54,7 +54,12 @@ const empty = {
   option_d: "",
   correct_answer: "A",
   question_type: "multiple",
+  extra_answers: [] as string[],
 };
+
+const MAX_FILL_ANSWERS = 8;
+const EXTRA_SEP = "||";
+const parseExtras = (raw: string) => (raw.includes(EXTRA_SEP) ? raw.split(EXTRA_SEP).map((v) => v.trim()).filter(Boolean) : []);
 
 const TYPES = [
   { id: "multiple", label: "Çoktan Seçmeli" },
@@ -122,14 +127,18 @@ function QuestionsPage() {
     }
     const question = list.data?.find((item) => item.id === selectedId);
     if (question) {
+      const isFill = (question.question_type || "multiple") === "fill";
       const loaded = {
         question: question.question,
         option_a: question.option_a,
-        option_b: question.option_b,
-        option_c: question.option_c,
+        option_b: isFill ? "" : question.option_b,
+        option_c: isFill ? "" : question.option_c,
         option_d: question.option_d,
-        correct_answer: question.correct_answer.toUpperCase(),
+        correct_answer: isFill ? question.correct_answer : question.correct_answer.toUpperCase(),
         question_type: question.question_type || "multiple",
+        extra_answers: isFill
+          ? [question.option_b, question.option_c, ...parseExtras(question.correct_answer)].filter((v) => v.trim())
+          : [],
       };
       setForm(loaded);
       lastSavedRef.current = JSON.stringify(loaded);
@@ -200,14 +209,25 @@ function QuestionsPage() {
     }
     if (silent) setAutoStatus("Kaydediliyor...");
     try {
+      const extras = (snapshot.extra_answers ?? []).map((v) => v.trim()).filter(Boolean).slice(0, MAX_FILL_ANSWERS - 1);
+      const payload =
+        type === "fill"
+          ? {
+              ...snapshot,
+              option_b: extras[0] ?? "",
+              option_c: extras[1] ?? "",
+              option_d: "",
+              correct_answer: extras.slice(2).join(EXTRA_SEP) || "A",
+            }
+          : snapshot;
       const target = targetRef.current;
       if (target.draft || !target.id) {
-        const result = await add({ data: { ...snapshot, setId } });
+        const result = await add({ data: { ...payload, setId } });
         setSelectedId(result.id);
         setDraftMode(false);
         targetRef.current = { draft: false, id: result.id };
       } else {
-        await edit({ data: { ...snapshot, id: target.id } });
+        await edit({ data: { ...payload, id: target.id } });
       }
       lastSavedRef.current = JSON.stringify(snapshot);
       if (silent) setAutoStatus("Kaydedildi");
@@ -523,36 +543,38 @@ function QuestionsPage() {
             {form.question_type === "fill" && (
               <div className="mt-4 lg:mt-3">
                 <div className="grid gap-2">
-                  {(() => {
-                    const keys = ["option_a", "option_b", "option_c"] as const;
-                    const lastUsed = keys.reduce((acc, key, i) => (form[key] !== "" ? i + 1 : acc), 0);
-                    const visibleCount = Math.min(Math.max(lastUsed, 1), keys.length);
-                    const canAdd = visibleCount < keys.length;
-                    return (
-                      <>
-                        {keys.slice(0, visibleCount).map((key, i) => (
-                          <input
-                            key={key}
-                            value={form[key]}
-                            onChange={(event) => set(key, event.target.value)}
-                            placeholder={i === 0 ? "Doğru cevap" : `Kabul edilen ${i + 1}. cevap (isteğe bağlı)`}
-                            aria-label={`${i + 1}. doğru cevap`}
-                            className={`h-14 w-full rounded-xl border px-4 text-base font-semibold text-studio-ink outline-hidden placeholder:text-studio-muted/60 ${i === 0 ? "border-studio-yellow bg-studio-yellow/10" : "border-studio-line bg-studio-elevated/60 focus:border-studio-yellow"}`}
-                          />
-                        ))}
-                        {canAdd && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => set(keys[visibleCount]!, " ")}
-                            className="h-10 w-full rounded-xl border border-dashed border-studio-line text-sm font-bold text-studio-muted hover:border-studio-yellow hover:bg-studio-yellow/10 hover:text-studio-yellow"
-                          >
-                            <Plus /> Alternatif cevap ekle
-                          </Button>
-                        )}
-                      </>
-                    );
-                  })()}
+                  <input
+                    value={form.option_a}
+                    onChange={(event) => set("option_a", event.target.value)}
+                    placeholder="Doğru cevap"
+                    aria-label="1. doğru cevap"
+                    className="h-14 w-full rounded-xl border border-studio-yellow bg-studio-yellow/10 px-4 text-base font-semibold text-studio-ink outline-hidden placeholder:text-studio-muted/60"
+                  />
+                  {(form.extra_answers ?? []).map((answer, i) => (
+                    <input
+                      key={i}
+                      value={answer}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          extra_answers: (current.extra_answers ?? []).map((v, j) => (j === i ? event.target.value : v)),
+                        }))
+                      }
+                      placeholder={`Kabul edilen ${i + 2}. cevap (isteğe bağlı)`}
+                      aria-label={`${i + 2}. doğru cevap`}
+                      className="h-14 w-full rounded-xl border border-studio-line bg-studio-elevated/60 px-4 text-base font-semibold text-studio-ink outline-hidden placeholder:text-studio-muted/60 focus:border-studio-yellow"
+                    />
+                  ))}
+                  {(form.extra_answers ?? []).length < MAX_FILL_ANSWERS - 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => setForm((current) => ({ ...current, extra_answers: [...(current.extra_answers ?? []), ""] }))}
+                      className="h-10 w-full rounded-xl border border-dashed border-studio-line text-sm font-bold text-studio-muted hover:border-studio-yellow hover:bg-studio-yellow/10 hover:text-studio-yellow"
+                    >
+                      <Plus /> Alternatif cevap ekle
+                    </Button>
+                  )}
                 </div>
                 <p className="mt-2 text-xs text-studio-muted">Büyük/küçük harf ve fazla boşluk fark etmez.</p>
               </div>

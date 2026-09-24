@@ -254,7 +254,7 @@ export const submitAnswer = createServerFn({ method: "POST" })
     const norm = (v: string) => v.trim().toLocaleLowerCase("tr-TR").replace(/\s+/g, " ");
     const isCorrect =
       q.question_type === "fill"
-        ? [q.option_a, q.option_b, q.option_c, q.option_d]
+        ? [q.option_a, q.option_b, q.option_c, q.option_d, ...(q.correct_answer.includes("||") ? q.correct_answer.split("||") : [])]
             .filter((v) => v && v.trim())
             .some((v) => norm(v) === norm(data.answer))
         : data.answer.length === 1 &&
