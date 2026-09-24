@@ -209,7 +209,7 @@ function QuestionsPage() {
     }
     if (silent) setAutoStatus("Kaydediliyor...");
     try {
-      const extras = snapshot.extra_answers.map((v) => v.trim()).filter(Boolean).slice(0, MAX_FILL_ANSWERS - 1);
+      const extras = (snapshot.extra_answers ?? []).map((v) => v.trim()).filter(Boolean).slice(0, MAX_FILL_ANSWERS - 1);
       const payload =
         type === "fill"
           ? {
@@ -550,14 +550,14 @@ function QuestionsPage() {
                     aria-label="1. doğru cevap"
                     className="h-14 w-full rounded-xl border border-studio-yellow bg-studio-yellow/10 px-4 text-base font-semibold text-studio-ink outline-hidden placeholder:text-studio-muted/60"
                   />
-                  {form.extra_answers.map((answer, i) => (
+                  {(form.extra_answers ?? []).map((answer, i) => (
                     <input
                       key={i}
                       value={answer}
                       onChange={(event) =>
                         setForm((current) => ({
                           ...current,
-                          extra_answers: current.extra_answers.map((v, j) => (j === i ? event.target.value : v)),
+                          extra_answers: (current.extra_answers ?? []).map((v, j) => (j === i ? event.target.value : v)),
                         }))
                       }
                       placeholder={`Kabul edilen ${i + 2}. cevap (isteğe bağlı)`}
@@ -565,11 +565,11 @@ function QuestionsPage() {
                       className="h-14 w-full rounded-xl border border-studio-line bg-studio-elevated/60 px-4 text-base font-semibold text-studio-ink outline-hidden placeholder:text-studio-muted/60 focus:border-studio-yellow"
                     />
                   ))}
-                  {form.extra_answers.length < MAX_FILL_ANSWERS - 1 && (
+                  {(form.extra_answers ?? []).length < MAX_FILL_ANSWERS - 1 && (
                     <Button
                       type="button"
                       variant="ghost"
-                      onClick={() => setForm((current) => ({ ...current, extra_answers: [...current.extra_answers, ""] }))}
+                      onClick={() => setForm((current) => ({ ...current, extra_answers: [...(current.extra_answers ?? []), ""] }))}
                       className="h-10 w-full rounded-xl border border-dashed border-studio-line text-sm font-bold text-studio-muted hover:border-studio-yellow hover:bg-studio-yellow/10 hover:text-studio-yellow"
                     >
                       <Plus /> Alternatif cevap ekle
