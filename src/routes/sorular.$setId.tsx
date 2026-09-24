@@ -527,7 +527,7 @@ function QuestionsPage() {
                     const keys = ["option_a", "option_b", "option_c"] as const;
                     const filledCount = keys.filter((key) => form[key].trim()).length;
                     const visibleCount = Math.min(Math.max(filledCount, 1), keys.length);
-                    const canAdd = visibleCount < keys.length && form[keys[visibleCount - 1]].trim();
+                    const canAdd = visibleCount < keys.length && form[keys[visibleCount - 1]!].trim();
                     return (
                       <>
                         {keys.slice(0, visibleCount).map((key, i) => (
@@ -544,7 +544,7 @@ function QuestionsPage() {
                           <Button
                             type="button"
                             variant="ghost"
-                            onClick={() => set(keys[visibleCount], " ")}
+                            onClick={() => set(keys[visibleCount]!, " ")}
                             className="h-10 w-full rounded-xl border border-dashed border-studio-line text-sm font-bold text-studio-muted hover:border-studio-yellow hover:bg-studio-yellow/10 hover:text-studio-yellow"
                           >
                             <Plus /> Alternatif cevap ekle
